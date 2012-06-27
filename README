@@ -1,0 +1,26 @@
+ASDF-FINALIZERS
+
+This library allows you to implement and enforce proper finalization
+of compile-time constructs while building Lisp source files.
+It depends on ASDF 2.22.1 or later.
+
+TODO:
+(1) Actually implement.
+(2) Add a test suite with examples.
+(3) Test it.
+(4) Add more corner cases.
+(5) Add XCVB support.
+
+
+==== Exported Functionality ====
+
+asdf-finalizers defines and uses package ASDF-FINALIZERS.
+It uses ASDF 2.22.1's :around-compile hook mechanism and
+the :compile-check extension to its compile-file* to build stuff.
+
+
+variable *XXX*
+  blah
+
+function FOO (BAR)
+  bluh
