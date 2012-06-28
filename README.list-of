@@ -1,0 +1,10 @@
+LIST-OF
+
+This library exemplifies how to use ASDF-FINALIZERS,
+and offers a way to implement lists with a uniform type of elements.
+
+==== Exported Functionality ====
+
+DEFTYPE LIST-OF (TYPE)
+  type of proper lists all of the elements of which are of given TYPE.
+  Beware: the type checking predicate may never stop when fed a circular list.

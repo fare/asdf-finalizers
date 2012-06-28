@@ -1,7 +1,7 @@
 #+xcvb (module (:depends-on ("asdf-finalizers" (:asdf "hu.dwim.stefil"))))
 
 (defpackage :asdf-finalizers-test
-  (:use :cl :fare-utils :asdf-finalizers :hu.dwim.stefil))
+  (:use :cl :fare-utils :asdf-finalizers :hu.dwim.stefil :list-of))
 
 (in-package :asdf-finalizers-test)
 
@@ -13,4 +13,8 @@
             :in root-suite
             :documentation "Testing asdf-finalizers"))
 
-;;; TODO: actually test stuff
+(deftest test-list-of ()
+  (is (typep '(nil t t nil) '(list-of boolean)))
+  (is (not (typep '(nil t 1 nil) '(list-of boolean))))
+  (is (not (typep '(nil t t nil . 1) '(list-of boolean))))
+  (is (typep '(1 2 3 4) '(list-of integer))))
