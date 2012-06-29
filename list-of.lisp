@@ -38,8 +38,12 @@
   (register-final-code `(declare-list-of ,type ,predicate)))
 
 (deftype list-of (type)
-  (let ((predicate (list-of-predicate-for type)))
-    (ensure-list-of-predicate type predicate)
-    (when (using-finalizers-p)
-      (ensure-final-list-of-predicate type predicate))
-    `(and list (satisfies ,predicate))))
+  (case type
+    ((t) 'list)
+    ((nil) 'null)
+    (otherwise
+     (let ((predicate (list-of-predicate-for type)))
+       (ensure-list-of-predicate type predicate)
+       (when (using-finalizers-p)
+	 (ensure-final-list-of-predicate type predicate))
+       `(and list (satisfies ,predicate))))))

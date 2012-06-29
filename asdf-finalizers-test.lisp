@@ -5,8 +5,6 @@
 
 (in-package :asdf-finalizers-test)
 
-(declaim (optimize (speed 1) (debug 3) (space 3)))
-
 ;;; Testing the asdf-finalizers library.
 
 (defsuite* (test-suite
@@ -17,4 +15,6 @@
   (is (typep '(nil t t nil) '(list-of boolean)))
   (is (not (typep '(nil t 1 nil) '(list-of boolean))))
   (is (not (typep '(nil t t nil . 1) '(list-of boolean))))
-  (is (typep '(1 2 3 4) '(list-of integer))))
+  (is (typep '(1 2 3 4) '(list-of integer)))
+  (is (not (typep '(1 2 3 4) '(list-of nil))))
+  (is (typep nil '(list-of nil))))
