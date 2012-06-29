@@ -1,4 +1,4 @@
-#+xcvb (module (:depends-on ("pkgdcl")))
+#+xcvb (module (:depends-on ("finalizers")))
 
 (in-package :asdf-finalizers)
 
@@ -13,9 +13,7 @@
 
 (defun check-finalizers-around-compile (fun)
   (with-finalizers ()
-    (unwind-protect
-	 (funcall fun :compile-check 'compile-check-finalizers)
-      (reset-finalizers))))
+    (funcall fun :compile-check 'compile-check-finalizers)))
 
 (defclass asdf::finalized-cl-source-file (cl-source-file)
   ((around-compile :initargs 'check-finalizers-around-compile)))

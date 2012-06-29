@@ -13,6 +13,9 @@
 (defun reset-finalizers ()
   (setf *finalizers* nil))
 
+(defun disable-finalizers ()
+  (makunbound '*finalizers*))
+
 (defmacro final-forms ()
   "Evaluate registered finalization thunks."
   `(progn
