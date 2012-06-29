@@ -2,10 +2,9 @@
 
 (in-package :asdf-finalizers)
 
-;;#+sbcl (declaim (sb-ext:muffle-conditions style-warning))
-
 ;; UNBOUND by default: catch people using them outside of a proper with-finalizers form!
 (defvar *finalizers*)
+(defvar *finalizers-data* nil)
 
 (defun using-finalizers-p ()
   (boundp '*finalizers*))
@@ -58,7 +57,8 @@ evaluate finalization forms."
   `(call-with-finalizers #'(lambda () ,@body) :finalize ,finalize))
 
 (defun call-with-finalizers (thunk &key finalize)
-  (let ((*finalizers* '()))
+  (let ((*finalizers* '())
+	(*finalizers-data* (make-hash-table :test 'equal)))
     (unwind-protect
 	 (funcall thunk)
       (when finalize (eval '(finalize)))
@@ -69,6 +69,7 @@ evaluate finalization forms."
 will evaluate toplevel FORM now during the macroexpansion phase, but also
 register it to be evaluated at the toplevel before the end of current file,
 so it is available to whoever load the associated FASL or CFASL.
+If the FORM has already been registered, it is skipped.
 Either now or when loading the (C?)FASL, the evaluation of FORM will be skipped
 when ALREADY-DONE-P-FORM evaluates to a true value.
 When finalizers are not enabled, warn with given warning and arguments or
@@ -80,9 +81,12 @@ and a build from clean will hopefully catch him if he didn't."
       (eval form))
     (cond
       ((using-finalizers-p)
-       (register-final-form
-	`(eval-when (:compile-toplevel :load-toplevel :execute)
-	   (unless ,already-done-p-form ,form))))
+       (let ((tag `(:done eval-at-toplevel ,form)))
+	 (unless (gethash tag *finalizers-data*)
+	   (setf (gethash tag *finalizers-data*) t)
+	   (register-final-form
+	    `(eval-when (:compile-toplevel :load-toplevel :execute)
+	       (unless ,already-done-p-form ,form))))))
       (already-done-p) ;; don't warn if it has already been done; it could be by design.
       (warning
        (apply 'warn warning warning-arguments))
