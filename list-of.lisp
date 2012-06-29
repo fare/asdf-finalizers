@@ -22,8 +22,6 @@
     (setf predicate (list-of-predicate-for type)))
   (check-type predicate symbol)
   (unless (fboundp predicate)
-    (unless (using-finalizers-p)
-      (warn "Defining list-of predicate ~S outside of a finalized Lisp source file" predicate))
     (setf (symbol-function predicate) (list-of-type-predicate type)))
   nil)
 
@@ -40,11 +38,8 @@
     ((nil) 'null)
     (otherwise
      (let ((predicate (list-of-predicate-for type)))
-       ;; make it available while compiling this file
-       (ensure-list-of-predicate type predicate)
-       ;; make it available when loading this file's (c?)fasl, if finalized
-       ;; but don't fuss if we're at the REPL and not in a file.
-       (when (using-finalizers-p)
-	 (ensure-final-list-of-predicate type predicate))
-       ;; use it now and in the future
+       (eval-at-toplevel
+	`(setf (symbol-function ',predicate) (list-of-type-predicate ',type))
+	`(fboundp ',predicate)
+	"Defining ~S outside of finalized Lisp code" `(list-of ,type))
        `(and list (satisfies ,predicate))))))

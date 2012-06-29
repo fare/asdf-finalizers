@@ -16,4 +16,5 @@
    #:call-with-finalizers
    #:with-finalizers
    #:using-finalizers-p
+   #:eval-at-toplevel
    ))
