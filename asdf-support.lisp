@@ -2,9 +2,12 @@
 
 (in-package :asdf-finalizers)
 
-(defun compile-check-finalizers (&rest args)
-  (declare (ignore args))
-  (no-finalizer-left-behind-p))
+(defun compile-check-finalizers (input-file &rest keys &key &allow-other-keys)
+  (declare (ignore keys))
+  (let ((foo (no-finalizer-left-behind-p)))
+    (unless foo
+      (warn "Source file ~A uses finalizers but fails to finalize" input-file))
+    foo))
 
 (defun check-finalizers-around-compile (fun)
   (with-finalizers ()

@@ -3,7 +3,7 @@
 (defsystem :asdf-finalizers
   :description "Enforced calling of finalizers for Lisp code"
   :defsystem-depends-on (:asdf)
-  :depends-on ((:version "asdf" "2.22.1")) ;; we require the :compile-check feature
+  :depends-on ((:version "asdf" "2.22.3")) ;; we require a working :compile-check feature
   :components
   ((:file "pkgdcl")
    (:file "finalizers" :depends-on ("pkgdcl"))
