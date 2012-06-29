@@ -40,7 +40,11 @@
     ((nil) 'null)
     (otherwise
      (let ((predicate (list-of-predicate-for type)))
+       ;; make it available while compiling this file
        (ensure-list-of-predicate type predicate)
+       ;; make it available when loading this file's (c?)fasl, if finalized
+       ;; but don't fuss if we're at the REPL and not in a file.
        (when (using-finalizers-p)
 	 (ensure-final-list-of-predicate type predicate))
+       ;; use it now and in the future
        `(and list (satisfies ,predicate))))))
