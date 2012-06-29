@@ -5,9 +5,10 @@
 (defpackage :asdf-finalizers
   (:use :cl :asdf)
   (:export
-   #:finalize
+   #:eval-at-toplevel
+   #:final-forms
    #:register-finalizer
-   #:register-final-code
+   #:register-final-form
    #:no-finalizer-left-behind-p
    #:assert-no-finalizer-left-behind
    #:compile-check-finalizers
@@ -16,5 +17,4 @@
    #:call-with-finalizers
    #:with-finalizers
    #:using-finalizers-p
-   #:eval-at-toplevel
    ))

@@ -10,7 +10,10 @@
 (defun using-finalizers-p ()
   (boundp '*finalizers*))
 
-(defmacro finalize ()
+(defun reset-finalizers ()
+  (setf *finalizers* nil))
+
+(defmacro final-forms ()
   "Evaluate registered finalization thunks."
   `(progn
      ,(loop :while *finalizers* :do (funcall (pop *finalizers*)))))
@@ -24,13 +27,13 @@ it will probably enclose these effects in a
  (EVAL-WHEN (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE) ...)"
   (push thunk *finalizers*))
 
-(defun register-final-code (code)
+(defun register-final-form (form)
   "Register a constant piece of code to the evaluated at toplevel
 at the end of the current code fragment (e.g. file).
 If its effects are to be available at compile-time,
 it will probably enclose these effects in a
  (EVAL-WHEN (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE) ...)"
-  (register-finalizer (constantly code)))
+  (register-finalizer (constantly form)))
 
 (defun no-finalizer-left-behind-p ()
   (null *finalizers*))
@@ -54,14 +57,14 @@ evaluate finalization forms."
       (assert-no-finalizer-left-behind))))
 
 (defun eval-at-toplevel (form &optional already-done-p-form warning &rest warning-arguments)
-  "This function, to be called during macroexpansion time, wiil
-evaluate toplevel FORM now during the macroexpansion phase, but also
+  "This function, to be used within a macro, deftype, reader-macro, etc.,
+will evaluate toplevel FORM now during the macroexpansion phase, but also
 register it to be evaluated at the toplevel before the end of current file,
 so it is available to whoever load the associated FASL or CFASL.
-Either now or when loading the (C?)FASL, skip evaluation of FORM
-when ALREADY-DONE-P-FORM evaluates to a true result.
+Either now or when loading the (C?)FASL, the evaluation of FORM will be skipped
+when ALREADY-DONE-P-FORM evaluates to a true value.
 When finalizers are not enabled, warn with given warning and arguments or
-with a default warning, unless ALREADY-DONE-P-FORM evaluated to a true result,
+with a default warning, unless ALREADY-DONE-P-FORM evaluated to a true value,
 at which point we trust the user to somehow have done the right thing,
 and a build from clean will hopefully catch him if he didn't."
   (let ((already-done-p (eval already-done-p-form)))
@@ -69,7 +72,7 @@ and a build from clean will hopefully catch him if he didn't."
       (eval form))
     (cond
       ((using-finalizers-p)
-       (register-final-code
+       (register-final-form
 	`(eval-when (:compile-toplevel :load-toplevel :execute)
 	   (unless ,already-done-p-form ,form))))
       (already-done-p) ;; don't warn if it has already been done; it could be by design.

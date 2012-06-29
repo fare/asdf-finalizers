@@ -7,7 +7,7 @@
   :components
   ((:file "pkgdcl")
    (:file "finalizers" :depends-on ("pkgdcl"))
-   (:file "asdf-support" :depends-on ("finalizers"))
+   (:file "asdf-support" :depends-on ("pkgdcl"))
    (:file "initialization" :depends-on ("pkgdcl"))))
 
 (defmethod perform ((op test-op) (system (eql (find-system :asdf-finalizers))))
