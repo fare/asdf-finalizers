@@ -4,10 +4,12 @@
 
 (defun compile-check-finalizers (input-file &rest keys &key &allow-other-keys)
   (declare (ignore keys))
-  (let ((foo (no-finalizer-left-behind-p)))
-    (unless foo
-      (warn "Source file ~A uses finalizers but fails to finalize" input-file))
-    foo))
+  (let ((okp (no-finalizer-left-behind-p)))
+    (unless okp
+      (warn "Source file ~A uses finalizers but fails to ~
+             include ~S between the last finalizer and the end of file"
+	    input-file '(final-forms)))
+    okp))
 
 (defun check-finalizers-around-compile (fun)
   (with-finalizers ()

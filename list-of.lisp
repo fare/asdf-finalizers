@@ -30,7 +30,7 @@
      (ensure-list-of-predicate ',type ',predicate)))
 
 (defun ensure-final-list-of-predicate (type &optional predicate)
-  (register-final-code `(declare-list-of ,type ,predicate)))
+  (register-final-form `(declare-list-of ,type ,predicate)))
 
 (deftype list-of (type)
   (case type

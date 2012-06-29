@@ -25,6 +25,11 @@ Any form returned by the THUNK will be included in the finalized code;
 if its effects are to be available at compile-time,
 it will probably enclose these effects in a
  (EVAL-WHEN (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE) ...)"
+  (unless (using-finalizers-p)
+    (error "Trying to use finalizers outside of a (~S ...) form. ~
+       You probably need to use ~
+       :around-compile \"asdf-finalizers:check-finalizers-around-compile\" ~
+       in your asdf defsystem" 'with-finalizers))
   (push thunk *finalizers*))
 
 (defun register-final-form (form)

@@ -19,4 +19,4 @@
   (is (not (typep '(1 2 3 4) '(list-of nil))))
   (is (typep nil '(list-of nil))))
 
-(finalize)
+(final-forms)
