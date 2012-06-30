@@ -17,4 +17,9 @@
    #:call-with-finalizers
    #:with-finalizers
    #:using-finalizers-p
+   #:finalizers-off
+   #:finalizers-off-error
+   #:finalizers-off-simple-error
+   #:finalizers-off-warning
+   #:finalizers-off-simple-warning
    ))

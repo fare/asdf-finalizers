@@ -9,7 +9,7 @@
 
 (defun list-of-predicate-for (type)
   (with-standard-io-syntax
-    (let ((*package* (find-package :cl)))
+    (let ((*package* (find-package :list-of)))
       (intern (format nil "LIST-OF-~S-P" type) :list-of))))
 
 (defun list-of-type-predicate (type)

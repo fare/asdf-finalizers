@@ -20,6 +20,13 @@
   `(progn
      ,(loop :while *finalizers* :do (funcall (pop *finalizers*)))))
 
+(define-condition finalizers-off () ())
+(define-condition finalizers-off-error (finalizers-off error) ())
+(define-condition finalizers-off-simple-error (finalizers-off-error simple-error) ())
+(define-condition finalizers-off-warning (finalizers-off warning) ())
+(define-condition finalizers-off-simple-warning (finalizers-off-error simple-warning) ())
+
+
 (defun register-finalizer (thunk)
   "Register a THUNK to be called during finalization.
 Any dependencies must be enforced by calling thunk dependencies.
@@ -28,10 +35,12 @@ if its effects are to be available at compile-time,
 it will probably enclose these effects in a
  (EVAL-WHEN (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE) ...)"
   (unless (using-finalizers-p)
-    (error "Trying to use finalizers outside of a (~S ...) form. ~
+    (error 'finalizers-off-simple-error
+	   :format-control "Trying to use finalizers outside of a (~S ...) form. ~
        You probably need to use ~
        :around-compile \"asdf-finalizers:check-finalizers-around-compile\" ~
-       in your asdf defsystem" 'with-finalizers))
+       in your asdf defsystem"
+	   :format-arguments '(with-finalizers)))
   (push thunk *finalizers*))
 
 (defun register-final-form (form)
@@ -76,21 +85,24 @@ When finalizers are not enabled, warn with given warning and arguments or
 with a default warning, unless ALREADY-DONE-P-FORM evaluated to a true value,
 at which point we trust the user to somehow have done the right thing,
 and a build from clean will hopefully catch him if he didn't."
-  (let ((already-done-p (eval already-done-p-form)))
+  (let ((whole `(eval-at-toplevel ,form ,already-done-p-form))
+	(already-done-p (eval already-done-p-form)))
     (unless already-done-p
       (eval form))
     (cond
       ((using-finalizers-p)
-       (let ((tag `(:done eval-at-toplevel ,form)))
-	 (unless (gethash tag *finalizers-data*)
-	   (setf (gethash tag *finalizers-data*) t)
-	   (register-final-form
-	    `(eval-when (:compile-toplevel :load-toplevel :execute)
-	       (unless ,already-done-p-form ,form))))))
+       (unless (gethash whole *finalizers-data*)
+	 (setf (gethash whole *finalizers-data*) t)
+	 (register-final-form
+	  `(eval-when (:compile-toplevel :load-toplevel :execute)
+	     (unless ,already-done-p-form ,form)))))
       (already-done-p) ;; don't warn if it has already been done; it could be by design.
-      (warning
+      ((stringp warning)
+       (warn 'finalizers-off-simple-warning :format-control warning :format-arguments warning-arguments))
+      ((and warning (symbolp warning))
        (apply 'warn warning warning-arguments))
       (t
-       (warn "trying to ~S form ~S without finalizers enabled~@[ while not ~S~]"
-	     'eval-at-toplevel form already-done-p-form))))
+       (warn 'finalizers-off-simple-warning
+	     :format-control "trying to ~S form ~S without finalizers enabled~@[ while not ~S~]"
+	     :format-arguments whole))))
   nil)
