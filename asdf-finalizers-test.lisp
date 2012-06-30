@@ -11,12 +11,23 @@
             :in root-suite
             :documentation "Testing asdf-finalizers"))
 
+(defun transpose (x)
+  (check-type x (list-of (list-of integer)))
+  (apply 'mapcar 'list x))
+
 (deftest test-list-of ()
   (is (typep '(nil t t nil) '(list-of boolean)))
   (is (not (typep '(nil t 1 nil) '(list-of boolean))))
   (is (not (typep '(nil t t nil . 1) '(list-of boolean))))
   (is (typep '(1 2 3 4) '(list-of integer)))
   (is (not (typep '(1 2 3 4) '(list-of nil))))
-  (is (typep nil '(list-of nil))))
+  (is (typep nil '(list-of nil)))
+  (is (equal (transpose '((1 2) (3 4))) '((1 3) (2 4))))
+  nil)
+
+(typep '(1 2 3) '(list-of string))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (typep '(1 2 3) '(list-of symbol)))
 
 (final-forms)

@@ -8,6 +8,9 @@ when finalizers are used outside of context.
 Typically, you want that flag to be on while compiling your application, but
 off when your application is done compiled and you're at runtime.")
 
+(defvar *debug-finalizers* nil
+  "Flag to enable debugging output for finalizers.")
+
 
 ;; UNBOUND by default: catch people using them outside of a proper with-finalizers form!
 (defvar *finalizers*)
@@ -28,14 +31,21 @@ off when your application is done compiled and you're at runtime.")
 
 (defmacro final-forms ()
   "Evaluate registered finalization thunks."
-  `(progn
-     ,(loop :while *finalizers* :do (funcall (pop *finalizers*)))))
+  (let ((forms (loop :while *finalizers* :collect (funcall (pop *finalizers*)))))
+    (when *debug-finalizers*
+      (with-standard-io-syntax
+	(let ((*package* (find-package :cl))
+	      (*print-pretty* t))
+	  (format *trace-output* "~&Final forms:~%~{  ~S~%~}~%" forms))))
+    `(progn ,@forms)))
 
 (define-condition finalizers-off () ())
 (define-condition finalizers-off-error (finalizers-off error) ())
 (define-condition finalizers-off-simple-error (finalizers-off-error simple-error) ())
 (define-condition finalizers-off-warning (finalizers-off warning) ())
 (define-condition finalizers-off-simple-warning (finalizers-off-warning simple-warning) ())
+
+(define-condition missing-final-forms (simple-warning) ())
 
 
 (defun register-finalizer (thunk)
