@@ -10,10 +10,14 @@
   (boundp '*finalizers*))
 
 (defun reset-finalizers ()
-  (setf *finalizers* nil))
+  (setf *finalizers* nil
+	*finalizers-data* (make-hash-table :test 'equal))
+  (values))
 
 (defun disable-finalizers ()
-  (makunbound '*finalizers*))
+  (makunbound '*finalizers*)
+  (makunbound '*finalizers-data*)
+  (values))
 
 (defmacro final-forms ()
   "Evaluate registered finalization thunks."
