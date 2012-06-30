@@ -31,3 +31,7 @@
   (typep '(1 2 3) '(list-of symbol)))
 
 (final-forms)
+
+#| Manual test: in a fresh Lisp,
+(require "asdf")(asdf:load-system :asdf-finalizers :force t)(trace asdf-finalizers:eval-at-toplevel asdf-finalizers:register-final-form)(setf asdf-finalizers::*debug-finalizers* t)(asdf:load-system :asdf-finalizers-test :force '(:asdf-finalizers-test))
+|#

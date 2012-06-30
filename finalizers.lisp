@@ -31,7 +31,9 @@ off when your application is done compiled and you're at runtime.")
 
 (defmacro final-forms ()
   "Evaluate registered finalization thunks."
-  (let ((forms (loop :while *finalizers* :collect (funcall (pop *finalizers*)))))
+  (let ((forms (reverse
+		(loop :while *finalizers*
+		      :collect (funcall (pop *finalizers*))))))
     (when *debug-finalizers*
       (with-standard-io-syntax
 	(let ((*package* (find-package :cl))
