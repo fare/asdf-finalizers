@@ -5,6 +5,7 @@
 (defpackage :asdf-finalizers
   (:use :cl :asdf)
   (:export
+   #:*warn-when-finalizers-off*
    #:eval-at-toplevel
    #:final-forms
    #:register-finalizer

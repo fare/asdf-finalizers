@@ -2,6 +2,13 @@
 
 (in-package :asdf-finalizers)
 
+(defvar *warn-when-finalizers-off* t
+  "Flag to enable or disable the raising warnings
+when finalizers are used outside of context.
+Typically, you want that flag to be on while compiling your application, but
+off when your application is done compiled and you're at runtime.")
+
+
 ;; UNBOUND by default: catch people using them outside of a proper with-finalizers form!
 (defvar *finalizers*)
 (defvar *finalizers-data* nil)
@@ -101,6 +108,7 @@ and a build from clean will hopefully catch him if he didn't."
 	  `(eval-when (:compile-toplevel :load-toplevel :execute)
 	     (unless ,already-done-p-form ,form)))))
       (already-done-p) ;; don't warn if it has already been done; it could be by design.
+      ((not *warn-when-finalizers-off*)) ;; don't warn if warnings are off - e.g. at runtime.
       ((stringp warning)
        (warn 'finalizers-off-simple-warning :format-control warning :format-arguments warning-arguments))
       ((and warning (symbolp warning))
