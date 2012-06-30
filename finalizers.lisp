@@ -24,7 +24,7 @@
 (define-condition finalizers-off-error (finalizers-off error) ())
 (define-condition finalizers-off-simple-error (finalizers-off-error simple-error) ())
 (define-condition finalizers-off-warning (finalizers-off warning) ())
-(define-condition finalizers-off-simple-warning (finalizers-off-error simple-warning) ())
+(define-condition finalizers-off-simple-warning (finalizers-off-warning simple-warning) ())
 
 
 (defun register-finalizer (thunk)
