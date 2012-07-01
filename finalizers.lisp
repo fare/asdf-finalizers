@@ -68,7 +68,7 @@ Any form returned by the thunk will be included in the finalized code.
 It will be wrapped inside an
   (EVAL-WHEN (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE) ...)
 but you can override that with your own explicit eval-when."
-  (check-type form (or function cons))
+  (check-type finalizer (or function cons))
   (unless (using-finalizers-p)
     (error 'finalizers-off-simple-error
 	   :format-control "Trying to use finalizers outside of a (~S ...) form. ~
@@ -76,7 +76,7 @@ but you can override that with your own explicit eval-when."
        :around-compile \"asdf-finalizers:check-finalizers-around-compile\" ~
        in your asdf defsystem"
 	   :format-arguments '(with-finalizers)))
-  (push thunk *finalizers*))
+  (push finalizer *finalizers*))
 
 (defun register-final-form (form)
   "Register a constant piece of code to the evaluated at toplevel
