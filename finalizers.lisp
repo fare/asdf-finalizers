@@ -31,12 +31,19 @@ off when your application is done compiled and you're at runtime.")
 
 (defmacro final-forms ()
   "Evaluate registered finalization thunks."
+  (when *finalizers*
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
+       ;;(eval-when (:compile-toplevel :execute) *finalizers*) ; trying to debug on CCL.
+       ,(expand-final-forms))))
+
+(defun expand-final-forms ()
   (let ((forms (reverse
 		(loop :while *finalizers*
 		      :collect (funcall (pop *finalizers*))))))
     (when *debug-finalizers*
       (with-standard-io-syntax
 	(let ((*package* (find-package :cl))
+              (*print-readably* nil)
 	      (*print-pretty* t))
 	  (format *trace-output* "~&Final forms:~%~{  ~S~%~}~%" forms))))
     `(progn ,@forms)))
@@ -53,10 +60,10 @@ off when your application is done compiled and you're at runtime.")
 (defun register-finalizer (thunk)
   "Register a THUNK to be called during finalization.
 Any dependencies must be enforced by calling thunk dependencies.
-Any form returned by the THUNK will be included in the finalized code;
-if its effects are to be available at compile-time,
-it will probably enclose these effects in a
- (EVAL-WHEN (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE) ...)"
+Any form returned by the THUNK will be included in the finalized code.
+It will be wrapped inside an
+  (EVAL-WHEN (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE) ...)
+but you can override that with your own explicit eval-when."
   (unless (using-finalizers-p)
     (error 'finalizers-off-simple-error
 	   :format-control "Trying to use finalizers outside of a (~S ...) form. ~
@@ -69,9 +76,9 @@ it will probably enclose these effects in a
 (defun register-final-form (form)
   "Register a constant piece of code to the evaluated at toplevel
 at the end of the current code fragment (e.g. file).
-If its effects are to be available at compile-time,
-it will probably enclose these effects in a
- (EVAL-WHEN (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE) ...)"
+It will be wrapped inside an
+  (EVAL-WHEN (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE) ...)
+but you can override that with your own explicit eval-when."
   (register-finalizer (constantly form)))
 
 (defun no-finalizer-left-behind-p ()
@@ -117,12 +124,14 @@ and a build from clean will hopefully catch him if he didn't."
        (unless (gethash whole *finalizers-data*)
 	 (setf (gethash whole *finalizers-data*) t)
 	 (register-final-form
-	  `(eval-when (:compile-toplevel :load-toplevel :execute)
-	     (unless ,already-done-p-form ,form)))))
+          (if already-done-p-form
+            `(unless ,already-done-p-form ,form)
+            form))))
       (already-done-p) ;; don't warn if it has already been done; it could be by design.
       ((not *warn-when-finalizers-off*)) ;; don't warn if warnings are off - e.g. at runtime.
       ((stringp warning)
-       (warn 'finalizers-off-simple-warning :format-control warning :format-arguments warning-arguments))
+       (warn 'finalizers-off-simple-warning
+             :format-control warning :format-arguments warning-arguments))
       ((and warning (symbolp warning))
        (apply 'warn warning warning-arguments))
       (t

@@ -59,17 +59,17 @@ function EVAL-AT-TOPLEVEL (FORM &optional ALREADY-DONE-P-FORM WARNING &rest WARN
 function REGISTER-FINAL-FORM (FORM)
   Register a constant piece of code to the evaluated at toplevel
   at the end of the current code fragment (e.g. file).
-  If its effects are to be available at compile-time,
-  it will probably enclose these effects in a
+  If will be expanded inside an
     (EVAL-WHEN (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE) ...)
+  but you can override that with your own eval-when.
 
 function REGISTER-FINALIZER (THUNK)
   Register a THUNK to be called during finalization.
   Any dependencies must be enforced by calling thunk dependencies.
-  Any form returned by the THUNK will be included in the finalized code;
-  if its effects are to be available at compile-time,
-  it will probably enclose these effects in a
+  Any form returned by the THUNK will be included in the finalized code.
+  If will be expanded inside an
     (EVAL-WHEN (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE) ...)
+  but you can override that with your own eval-when.
 
 macro WITH-FINALIZERS (() &body BODY)
   Evaluate BODY in a context where finalizers are enabled.
