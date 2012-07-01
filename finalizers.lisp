@@ -39,7 +39,10 @@ off when your application is done compiled and you're at runtime.")
 (defun expand-final-forms ()
   (let ((forms (reverse
 		(loop :while *finalizers*
-		      :collect (funcall (pop *finalizers*))))))
+		      :collect (let ((f (pop *finalizers*)))
+                                 (etypecase f
+                                   (function (funcall f))
+                                   (cons f)))))))
     (when *debug-finalizers*
       (with-standard-io-syntax
 	(let ((*package* (find-package :cl))
@@ -57,13 +60,15 @@ off when your application is done compiled and you're at runtime.")
 (define-condition missing-final-forms (simple-warning) ())
 
 
-(defun register-finalizer (thunk)
-  "Register a THUNK to be called during finalization.
+(defun register-finalizer (finalizer)
+  "Register a thunk to be called during finalization (if a function)
+or a constant form to be included (if a cons).
 Any dependencies must be enforced by calling thunk dependencies.
-Any form returned by the THUNK will be included in the finalized code.
+Any form returned by the thunk will be included in the finalized code.
 It will be wrapped inside an
   (EVAL-WHEN (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE) ...)
 but you can override that with your own explicit eval-when."
+  (check-type form (or function cons))
   (unless (using-finalizers-p)
     (error 'finalizers-off-simple-error
 	   :format-control "Trying to use finalizers outside of a (~S ...) form. ~
@@ -79,7 +84,8 @@ at the end of the current code fragment (e.g. file).
 It will be wrapped inside an
   (EVAL-WHEN (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE) ...)
 but you can override that with your own explicit eval-when."
-  (register-finalizer (constantly form)))
+  (check-type form cons)
+  (register-finalizer form))
 
 (defun no-finalizer-left-behind-p ()
   (null *finalizers*))
