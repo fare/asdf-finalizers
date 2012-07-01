@@ -31,10 +31,13 @@ off when your application is done compiled and you're at runtime.")
 
 (defmacro final-forms ()
   "Evaluate registered finalization thunks."
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (final-forms-too)))
+
+(defmacro final-forms-too ()
   (when *finalizers*
-    `(eval-when (:compile-toplevel :load-toplevel :execute)
-       ;;(eval-when (:compile-toplevel :execute) *finalizers*) ; trying to debug on CCL.
-       ,(expand-final-forms))))
+    ;;(eval-when (:compile-toplevel :execute) *finalizers*) ; trying to debug on CCL.
+    (expand-final-forms)))
 
 (defun expand-final-forms ()
   (let ((forms (reverse
