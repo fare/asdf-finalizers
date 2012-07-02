@@ -109,7 +109,7 @@ evaluate finalization forms."
 	(*finalizers-data* (make-hash-table :test 'equal)))
     (unwind-protect
 	 (funcall thunk)
-      (when finalize (eval '(finalize)))
+      (when finalize (eval '(final-forms)))
       (assert-no-finalizer-left-behind))))
 
 (defun eval-at-toplevel (form &optional already-done-p-form warning &rest warning-arguments)
