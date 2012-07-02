@@ -25,13 +25,6 @@
     (setf (symbol-function predicate) (list-of-type-predicate type)))
   nil)
 
-(defmacro declare-list-of (type &optional predicate)
-  `(eval-when (:compile-toplevel :load-toplevel :execute)
-     (ensure-list-of-predicate ',type ',predicate)))
-
-(defun ensure-final-list-of-predicate (type &optional predicate)
-  (register-final-form `(declare-list-of ,type ,predicate)))
-
 (deftype list-of (type)
   (case type
     ((t) 'list)
@@ -39,7 +32,14 @@
     (otherwise
      (let ((predicate (list-of-predicate-for type)))
        (eval-at-toplevel
-	`(setf (symbol-function ',predicate) (list-of-type-predicate ',type))
-	`(fboundp ',predicate)
+	`(ensure-list-of-predicate ',type ',predicate)
+	`(fboundp ',predicate) ;; hush unnecessary eval-at-toplevel warnings
 	"Defining ~S outside of finalized Lisp code" `(list-of ,type))
        `(and list (satisfies ,predicate))))))
+
+;; This is available in case you prefer to explicitly call declare-list-of
+;; in your code-base rather than rely on finalizers.
+;; It is not exported because we do not encourage it, but you can import it.
+(defmacro declare-list-of (type)
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (ensure-list-of-predicate ',type)))
