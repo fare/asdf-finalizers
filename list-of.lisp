@@ -27,8 +27,8 @@
 
 (deftype list-of (type)
   (case type
-    ((t) 'list)
-    ((nil) 'null)
+    ((t) 'list) ;; a (list-of t) is the same as a regular list.
+    ((nil) 'null) ;; a (list-of nil) can have no elements, it's null.
     (otherwise
      (let ((predicate (list-of-predicate-for type)))
        (eval-at-toplevel ;; now, and amongst final-forms if enabled
