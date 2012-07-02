@@ -31,7 +31,7 @@
     ((nil) 'null)
     (otherwise
      (let ((predicate (list-of-predicate-for type)))
-       (eval-at-toplevel
+       (eval-at-toplevel ;; now, and amongst final-forms if enabled
 	`(ensure-list-of-predicate ',type ',predicate)
 	`(fboundp ',predicate) ;; hush unnecessary eval-at-toplevel warnings
 	"Defining ~S outside of finalized Lisp code" `(list-of ,type))
