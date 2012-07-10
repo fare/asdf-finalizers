@@ -12,6 +12,15 @@ off when your application is done compiled and you're at runtime.")
   "Flag to enable debugging output for finalizers.")
 
 
+(define-condition finalizers-off () ())
+(define-condition finalizers-off-error (finalizers-off error) ())
+(define-condition finalizers-off-simple-error (finalizers-off-error simple-error) ())
+(define-condition finalizers-off-warning (finalizers-off warning) ())
+(define-condition finalizers-off-simple-warning (finalizers-off-warning simple-warning) ())
+
+(define-condition missing-final-forms (simple-warning) ())
+
+
 ;; UNBOUND by default: catch people using them outside of a proper with-finalizers form!
 (defvar *finalizers*)
 (defvar *finalizers-data* nil)
@@ -47,32 +56,31 @@ off when your application is done compiled and you're at runtime.")
      (final-forms-internal)))
 
 (defmacro final-forms-internal ()
-  (when *finalizers*
-    (expand-final-forms)))
+  (expand-final-forms))
 
 (defun expand-final-forms ()
-  (let ((forms (reverse
-		(loop :while *finalizers*
-		      :collect (let ((f (pop *finalizers*)))
-                                 (etypecase f
-                                   (function (funcall f))
-                                   (cons f)))))))
-    (when *debug-finalizers*
-      (with-standard-io-syntax
-	(let ((*package* (find-package :cl))
-              (*print-readably* nil)
-	      (*print-pretty* t))
-	  (format *trace-output* "~&Final forms:~%~{  ~S~%~}~%" forms))))
-    `(progn ,@forms)))
-
-(define-condition finalizers-off () ())
-(define-condition finalizers-off-error (finalizers-off error) ())
-(define-condition finalizers-off-simple-error (finalizers-off-error simple-error) ())
-(define-condition finalizers-off-warning (finalizers-off warning) ())
-(define-condition finalizers-off-simple-warning (finalizers-off-warning simple-warning) ())
-
-(define-condition missing-final-forms (simple-warning) ())
-
+  (cond
+    ((using-finalizers-p)
+     (let ((forms (reverse
+		   (loop :while *finalizers*
+			 :collect (let ((f (pop *finalizers*)))
+				    (etypecase f
+				      (function (funcall f))
+				      (cons f)))))))
+       (when *debug-finalizers*
+	 (with-standard-io-syntax
+	   (let ((*package* (find-package :cl))
+		 (*print-readably* nil)
+		 (*print-pretty* t))
+	     (format *trace-output* "~&Final forms:~%~{  ~S~%~}~%" forms))))
+       `(progn ,@forms)))
+    (*warn-when-finalizers-off*
+     (warn 'finalizers-off-simple-warning
+	   :format-control "~S expanded outside of ~S"
+	   :format-arguments '(final-forms with-finalizers))
+     nil)
+    (t
+     nil)))
 
 (defun register-finalizer (finalizer)
   "This function, to be used within a macro, reader-macro, deftype, etc.,
