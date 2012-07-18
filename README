@@ -6,6 +6,7 @@ It depends on ASDF 2.22.3 or later.
 
 TODO:
 * Add XCVB support.
+* Add SLIME support for proper :around-compile hooks.
 
 
 ==== Exported Functionality ====
