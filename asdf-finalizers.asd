@@ -12,4 +12,4 @@
 
 (defmethod perform ((op test-op) (system (eql (find-system :asdf-finalizers))))
   (asdf:load-system :asdf-finalizers-test)
-  (funcall (asdf:find-symbol* :test-suite :asdf-finalizers-test)))
+  (funcall (asdf::find-symbol* :test-suite :asdf-finalizers-test)))
