@@ -58,15 +58,15 @@
        `(and list (satisfies ,predicate))))))
 
 (deftype vector-of (type)
-  (case type
-    ((t) 'vector) ;; a (vector-of t) is the same as a regular vector.
-    (otherwise
-     (let ((predicate (vector-of-predicate-for type)))
-       (eval-at-toplevel ;; now, and amongst final-forms if enabled
-	`(ensure-vector-of-predicate ',type ',predicate)
-	`(fboundp ',predicate) ;; hush unnecessary eval-at-toplevel warnings
-	"Defining ~S outside of finalized Lisp code" `(vector-of ,type))
-       `(and vector (satisfies ,predicate))))))
+  (let ((spec-type (upgraded-array-element-type type)))
+    (if (equal type spec-type)
+        `(vector ,spec-type)
+        (let ((predicate (vector-of-predicate-for type)))
+          (eval-at-toplevel ;; now, and amongst final-forms if enabled
+           `(ensure-vector-of-predicate ',type ',predicate)
+           `(fboundp ',predicate) ;; hush unnecessary eval-at-toplevel warnings
+           "Defining ~S outside of finalized Lisp code" `(vector-of ,type))
+          `(and (vector ,spec-type) (satisfies ,predicate))))))
 
 ;; These are available in case you prefer to explicitly call declare-list-of and
 ;; declare-vector-of in your code-base rather than rely on finalizers.
