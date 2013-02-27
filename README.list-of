@@ -23,3 +23,7 @@ LIST-OF defines the LIST-OF package from which it exports:
 DEFTYPE LIST-OF (TYPE)
   type of proper lists all of the elements of which are of given TYPE.
   Beware: the type checking predicate may never stop when fed a circular list.
+
+DEFTYPE VECTOR-OF (TYPE)
+  type of vectors all of the elements of which are of given TYPE.
+  The vector may be specialized as per UPGRADED-ARRAY-ELEMENT-TYPE.
