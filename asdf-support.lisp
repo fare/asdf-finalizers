@@ -28,7 +28,7 @@
     (funcall fun :compile-check 'compile-check-finalizers)))
 
 (defclass asdf::finalized-cl-source-file (cl-source-file)
-  ((around-compile :initarg 'check-finalizers-around-compile))
+  ((around-compile :initform 'check-finalizers-around-compile))
   (:documentation "Assuming your system :defsystem-depends-on (:asdf-finalizers),
   you may use this class as your system's :default-component-class,
   or as the class of a component as in
